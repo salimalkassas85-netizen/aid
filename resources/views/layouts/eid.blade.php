@@ -12,6 +12,11 @@
     @else
         <link rel="stylesheet" href="{{ asset('css/eid.css') }}">
     @endif
+    @if (file_exists(resource_path('css/eid.css')))
+        <style>
+            {!! file_get_contents(resource_path('css/eid.css')) !!}
+        </style>
+    @endif
 </head>
 <body class="eid-body">
     <div class="eid-background" aria-hidden="true">
