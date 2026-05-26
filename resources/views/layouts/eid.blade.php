@@ -7,7 +7,11 @@
     <title>@yield('title', 'اصنع تهنئة عيد الأضحى باسم من تحب')</title>
     <meta name="description" content="@yield('description', 'أنشئ تهنئة عيد الأضحى باسم شخص عزيز وشاركها برابط خاص على فيسبوك.')">
     @yield('meta')
-    @vite(['resources/css/app.css', 'resources/css/eid.css', 'resources/js/app.js'])
+    @if (file_exists(public_path('hot')) || file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/css/eid.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('css/eid.css') }}">
+    @endif
 </head>
 <body class="eid-body">
     <div class="eid-background" aria-hidden="true">
