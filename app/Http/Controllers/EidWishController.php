@@ -9,6 +9,7 @@ use App\Services\WishMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class EidWishController extends Controller
 {
@@ -17,7 +18,6 @@ class EidWishController extends Controller
         return view('eid.create', [
             'relationships' => StoreWishRequest::RELATIONSHIPS,
             'styles' => StoreWishRequest::STYLES,
-            'audioStyles' => StoreWishRequest::AUDIO_STYLES,
         ]);
     }
 
@@ -27,19 +27,18 @@ class EidWishController extends Controller
         WishAudioService $audioService
     ): RedirectResponse {
         $validated = $request->validated();
-        $audioStyle = $validated['audio_style'] ?? 'none';
         unset($validated['audio_recording']);
 
         $wish = Wish::create([
             ...$validated,
-            'audio_style' => $audioStyle,
+            'audio_style' => 'none',
             'message' => $messageService->generate(
                 $validated['sender_name'],
                 $validated['receiver_name'],
                 $validated['relationship'],
                 $validated['style'],
             ),
-            'audio_path' => $audioService->resolve($audioStyle),
+            'audio_path' => null,
         ]);
 
         if ($request->hasFile('audio_recording')) {
@@ -52,18 +51,10 @@ class EidWishController extends Controller
         return redirect()->route('eid.show', $wish->code);
     }
 
-    public function show(string $code, WishAudioService $audioService): View
+    public function show(string $code): View
     {
         $wish = Wish::where('code', $code)->firstOrFail();
         $wish->increment('views');
-
-        if (! $wish->audio_path && $wish->audio_style && ! in_array($wish->audio_style, ['none', 'recording'], true)) {
-            $audioPath = $audioService->resolve($wish->audio_style);
-
-            if ($audioPath) {
-                $wish->forceFill(['audio_path' => $audioPath])->save();
-            }
-        }
 
         return view('eid.show', [
             'wish' => $wish->fresh(),
@@ -77,5 +68,22 @@ class EidWishController extends Controller
         $wish->increment('facebook_shares');
 
         return response()->noContent();
+    }
+
+    public function audio(string $code): BinaryFileResponse
+    {
+        $wish = Wish::where('code', $code)->firstOrFail();
+
+        abort_if(! $wish->audio_path, 404);
+
+        $audioRoot = realpath(public_path('audio'));
+        $audioFile = realpath(public_path(ltrim($wish->audio_path, '/')));
+
+        abort_if(! $audioRoot || ! $audioFile || ! str_starts_with($audioFile, $audioRoot), 404);
+
+        return response()->file($audioFile, [
+            'Content-Type' => mime_content_type($audioFile) ?: 'audio/wav',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
     }
 }

@@ -428,6 +428,18 @@ small {
     margin-top: 10px;
 }
 
+.audio-direct-link {
+    display: inline-flex;
+    margin-top: 10px;
+    color: #ffd66f;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.audio-direct-link:hover {
+    text-decoration: underline;
+}
+
 .audio-box p {
     margin: 8px 0 0;
     color: #d9d1b5;

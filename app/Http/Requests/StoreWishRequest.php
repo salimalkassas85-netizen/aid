@@ -28,13 +28,6 @@ class StoreWishRequest extends FormRequest
         'corporate' => 'رسمية / شركات',
     ];
 
-    public const AUDIO_STYLES = [
-        'takbeer' => 'تكبيرات العيد',
-        'nasheed' => 'أنشودة هادئة',
-        'soft' => 'موسيقى هادئة مرخصة',
-        'none' => 'بدون صوت',
-    ];
-
     public function authorize(): bool
     {
         return true;
@@ -55,7 +48,6 @@ class StoreWishRequest extends FormRequest
             'receiver_name' => ['required', 'string', 'max:50', 'not_regex:/[<>]/'],
             'relationship' => ['required', Rule::in(array_keys(self::RELATIONSHIPS))],
             'style' => ['required', Rule::in(array_keys(self::STYLES))],
-            'audio_style' => ['nullable', Rule::in(array_keys(self::AUDIO_STYLES))],
             'audio_recording' => [
                 'nullable',
                 'file',
@@ -78,7 +70,6 @@ class StoreWishRequest extends FormRequest
             'relationship.in' => 'صلة القرابة غير صحيحة.',
             'style.required' => 'اختر أسلوب التهنئة.',
             'style.in' => 'أسلوب التهنئة غير صحيح.',
-            'audio_style.in' => 'اختيار الصوت غير صحيح.',
             'audio_recording.file' => 'ملف التسجيل غير صحيح.',
             'audio_recording.mimes' => 'صيغة التسجيل غير مدعومة.',
             'audio_recording.max' => 'مدة التسجيل المسموحة حتى 10 ثوانٍ فقط.',

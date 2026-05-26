@@ -65,12 +65,6 @@ class EidWishTest extends TestCase
             ->assertSessionHasErrors('style');
     }
 
-    public function test_invalid_audio_style_fails_validation(): void
-    {
-        $this->post('/eid', $this->validPayload(['audio_style' => 'copyrighted-song']))
-            ->assertSessionHasErrors('audio_style');
-    }
-
     public function test_views_increment_when_public_page_is_opened(): void
     {
         $wish = Wish::create($this->wishAttributes());
@@ -112,26 +106,11 @@ class EidWishTest extends TestCase
             ->assertSee(route('eid.create'), false);
     }
 
-    public function test_public_page_resolves_existing_audio_file_for_old_wish(): void
-    {
-        $wish = Wish::create($this->wishAttributes([
-            'audio_style' => 'soft',
-            'audio_path' => null,
-        ]));
-
-        $this->get(route('eid.show', $wish->code))
-            ->assertOk()
-            ->assertSee('/audio/eid-soft.wav', false);
-
-        $this->assertSame('/audio/eid-soft.wav', $wish->fresh()->audio_path);
-    }
-
     public function test_user_can_create_wish_with_recorded_audio(): void
     {
         $recording = UploadedFile::fake()->create('eid-recording.webm', 100, 'audio/webm');
 
         $response = $this->post('/eid', $this->validPayload([
-            'audio_style' => 'none',
             'audio_recording' => $recording,
         ]));
 
@@ -144,7 +123,10 @@ class EidWishTest extends TestCase
 
         $this->get(route('eid.show', $wish->code))
             ->assertOk()
-            ->assertSee('/audio/wishes/'.$wish->code.'.webm', false);
+            ->assertSee(route('eid.audio', $wish->code), false);
+
+        $this->get(route('eid.audio', $wish->code))
+            ->assertOk();
 
         @unlink(public_path('audio/wishes/'.$wish->code.'.webm'));
     }
@@ -162,7 +144,6 @@ class EidWishTest extends TestCase
             'receiver_name' => 'أحمد',
             'relationship' => 'friend',
             'style' => 'religious',
-            'audio_style' => 'none',
         ], $overrides);
     }
 

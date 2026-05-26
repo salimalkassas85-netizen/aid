@@ -62,18 +62,6 @@
                 @enderror
             </label>
 
-            <label>
-                <span>الصوت</span>
-                <select name="audio_style">
-                    @foreach ($audioStyles as $value => $label)
-                        <option value="{{ $value }}" @selected(old('audio_style', 'none') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-                @error('audio_style')
-                    <small>{{ $message }}</small>
-                @enderror
-            </label>
-
             <div class="recorder-box">
                 <div>
                     <span class="recorder-title">رسالة صوتية بصوتك</span>
@@ -122,6 +110,56 @@
             recordingTime.textContent = `00:${String(seconds).padStart(2, '0')}`;
         }
 
+        function encodeWav(samples, sampleRate) {
+            const buffer = new ArrayBuffer(44 + samples.length * 2);
+            const view = new DataView(buffer);
+
+            function writeString(offset, value) {
+                for (let i = 0; i < value.length; i += 1) {
+                    view.setUint8(offset + i, value.charCodeAt(i));
+                }
+            }
+
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * 2, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(36, 'data');
+            view.setUint32(40, samples.length * 2, true);
+
+            let offset = 44;
+            for (let i = 0; i < samples.length; i += 1, offset += 2) {
+                const sample = Math.max(-1, Math.min(1, samples[i]));
+                view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function convertRecordingToWav(blob) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+            if (! AudioContext) {
+                return blob;
+            }
+
+            const context = new AudioContext();
+            const arrayBuffer = await blob.arrayBuffer();
+            const audioBuffer = await context.decodeAudioData(arrayBuffer.slice(0));
+            const channelData = audioBuffer.getChannelData(0);
+            const wavBlob = encodeWav(channelData, audioBuffer.sampleRate);
+            await context.close?.();
+
+            return wavBlob;
+        }
+
         function finishRecording() {
             if (! mediaRecorder || mediaRecorder.state === 'inactive') {
                 return;
@@ -150,17 +188,30 @@
                     }
                 });
 
-                mediaRecorder.addEventListener('stop', function () {
+                mediaRecorder.addEventListener('stop', async function () {
                     window.clearInterval(recordingTimer);
                     recordingStream?.getTracks().forEach((track) => track.stop());
+                    recordingStatus.textContent = 'جاري تجهيز التسجيل...';
 
                     const type = recordingChunks[0]?.type || 'audio/webm';
                     const blob = new Blob(recordingChunks, { type });
-                    const file = new File([blob], 'eid-recording.webm', { type });
+                    let uploadBlob = blob;
+                    let filename = 'eid-recording.webm';
+                    let uploadType = type;
+
+                    try {
+                        uploadBlob = await convertRecordingToWav(blob);
+                        filename = 'eid-recording.wav';
+                        uploadType = 'audio/wav';
+                    } catch (error) {
+                        uploadBlob = blob;
+                    }
+
+                    const file = new File([uploadBlob], filename, { type: uploadType });
                     const files = new DataTransfer();
                     files.items.add(file);
                     audioRecording.files = files.files;
-                    recordingPreview.src = URL.createObjectURL(blob);
+                    recordingPreview.src = URL.createObjectURL(uploadBlob);
                     recordingPreview.hidden = false;
                     recordingStatus.textContent = 'تم حفظ التسجيل وسيتم إرساله مع التهنئة.';
                     startRecording.disabled = false;

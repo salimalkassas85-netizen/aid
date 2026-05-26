@@ -4,6 +4,7 @@
     $shareUrl = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($greetingUrl);
     $description = \Illuminate\Support\Str::limit($wish->message, 120, '');
     $ogImagePath = public_path('images/eid-og.jpg');
+    $audioUrl = $wish->audio_path ? route('eid.audio', $wish->code) : null;
 @endphp
 
 @section('title', 'تهنئة عيد الأضحى إلى '.$wish->receiver_name)
@@ -38,15 +39,8 @@
                     <span class="audio-pulse"></span>
                     <div>
                         <strong>استمع إلى التهنئة</strong>
-                        <audio controls preload="none" src="{{ $wish->audio_path }}"></audio>
-                    </div>
-                </div>
-            @elseif ($wish->audio_style && $wish->audio_style !== 'none')
-                <div class="audio-box unavailable-audio">
-                    <span class="audio-pulse muted"></span>
-                    <div>
-                        <strong>الصوت المختار غير متوفر حاليًا</strong>
-                        <p>يمكن لصاحب التهنئة إضافة ملف صوتي مرخص ليظهر هنا.</p>
+                        <audio controls preload="none" src="{{ $audioUrl }}"></audio>
+                        <a class="audio-direct-link" href="{{ $audioUrl }}" target="_blank" rel="noopener">فتح الصوت مباشرة</a>
                     </div>
                 </div>
             @endif
