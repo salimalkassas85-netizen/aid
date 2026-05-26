@@ -39,7 +39,8 @@
                     <span class="audio-pulse"></span>
                     <div>
                         <strong>استمع إلى التهنئة</strong>
-                        <audio controls preload="none" src="{{ $audioUrl }}"></audio>
+                        <audio id="wishAudio" controls autoplay loop playsinline preload="auto" src="{{ $audioUrl }}"></audio>
+                        <button class="audio-start-button" type="button" id="startAudio" hidden>تشغيل الصوت</button>
                         <a class="audio-direct-link" href="{{ $audioUrl }}" target="_blank" rel="noopener">فتح الصوت مباشرة</a>
                     </div>
                 </div>
@@ -90,5 +91,29 @@
                 window.open(shareUrl, '_blank', 'noopener');
             });
         });
+
+        const wishAudio = document.getElementById('wishAudio');
+        const startAudio = document.getElementById('startAudio');
+
+        if (wishAudio) {
+            wishAudio.loop = true;
+
+            window.addEventListener('load', async function () {
+                try {
+                    await wishAudio.play();
+                } catch (error) {
+                    startAudio.hidden = false;
+                }
+            });
+
+            startAudio?.addEventListener('click', async function () {
+                try {
+                    await wishAudio.play();
+                    this.hidden = true;
+                } catch (error) {
+                    this.textContent = 'اضغط تشغيل من مشغل الصوت';
+                }
+            });
+        }
     </script>
 @endpush

@@ -35,6 +35,10 @@
         @yield('content')
     </main>
 
+    <footer class="eid-footer">
+        Developed by Salem
+    </footer>
+
     @stack('scripts')
 </body>
 </html>
