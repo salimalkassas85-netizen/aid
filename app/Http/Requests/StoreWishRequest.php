@@ -56,6 +56,12 @@ class StoreWishRequest extends FormRequest
             'relationship' => ['required', Rule::in(array_keys(self::RELATIONSHIPS))],
             'style' => ['required', Rule::in(array_keys(self::STYLES))],
             'audio_style' => ['nullable', Rule::in(array_keys(self::AUDIO_STYLES))],
+            'audio_recording' => [
+                'nullable',
+                'file',
+                'mimetypes:audio/webm,video/webm,audio/ogg,video/ogg,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,video/mp4,audio/x-m4a,application/octet-stream',
+                'max:3072',
+            ],
         ];
     }
 
@@ -73,6 +79,9 @@ class StoreWishRequest extends FormRequest
             'style.required' => 'اختر أسلوب التهنئة.',
             'style.in' => 'أسلوب التهنئة غير صحيح.',
             'audio_style.in' => 'اختيار الصوت غير صحيح.',
+            'audio_recording.file' => 'ملف التسجيل غير صحيح.',
+            'audio_recording.mimes' => 'صيغة التسجيل غير مدعومة.',
+            'audio_recording.max' => 'مدة التسجيل المسموحة حتى 10 ثوانٍ فقط.',
         ];
     }
 }

@@ -28,6 +28,7 @@ class EidWishController extends Controller
     ): RedirectResponse {
         $validated = $request->validated();
         $audioStyle = $validated['audio_style'] ?? 'none';
+        unset($validated['audio_recording']);
 
         $wish = Wish::create([
             ...$validated,
@@ -41,6 +42,13 @@ class EidWishController extends Controller
             'audio_path' => $audioService->resolve($audioStyle),
         ]);
 
+        if ($request->hasFile('audio_recording')) {
+            $wish->forceFill([
+                'audio_style' => 'recording',
+                'audio_path' => $audioService->storeRecording($request->file('audio_recording'), $wish->code),
+            ])->save();
+        }
+
         return redirect()->route('eid.show', $wish->code);
     }
 
@@ -49,7 +57,7 @@ class EidWishController extends Controller
         $wish = Wish::where('code', $code)->firstOrFail();
         $wish->increment('views');
 
-        if (! $wish->audio_path && $wish->audio_style && $wish->audio_style !== 'none') {
+        if (! $wish->audio_path && $wish->audio_style && ! in_array($wish->audio_style, ['none', 'recording'], true)) {
             $audioPath = $audioService->resolve($wish->audio_style);
 
             if ($audioPath) {

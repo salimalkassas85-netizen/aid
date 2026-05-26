@@ -251,6 +251,66 @@ small {
     font-weight: 600;
 }
 
+.recorder-box {
+    margin: 6px 0 20px;
+    padding: 18px;
+    border: 1px solid rgba(248, 211, 116, .24);
+    border-radius: 22px;
+    background: rgba(0, 0, 0, .22);
+}
+
+.recorder-title {
+    display: block;
+    color: #fff2c2;
+    font-weight: 900;
+}
+
+.recorder-box p {
+    margin: 8px 0 0;
+    color: #d9d1b5;
+    line-height: 1.7;
+}
+
+.recorder-controls {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.recording-time {
+    min-width: 58px;
+    min-height: 42px;
+    border: 1px solid rgba(255, 230, 168, .24);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffd66f;
+    background: rgba(255, 255, 255, .06);
+    font-weight: 900;
+}
+
+.recording-preview {
+    width: 100%;
+    margin-top: 14px;
+}
+
+.recording-status {
+    font-size: .95rem;
+}
+
+.danger-button {
+    border-color: rgba(255, 176, 168, .42);
+    color: #ffd3ce;
+}
+
+.ghost-button:disabled {
+    cursor: not-allowed;
+    opacity: .52;
+}
+
 .gold-button,
 .ghost-button,
 .cta-link {
@@ -467,7 +527,8 @@ small {
     }
 
     .form-grid,
-    .actions {
+    .actions,
+    .recorder-controls {
         grid-template-columns: 1fr;
     }
 

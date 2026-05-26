@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Wish;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class EidWishTest extends TestCase
@@ -123,6 +124,29 @@ class EidWishTest extends TestCase
             ->assertSee('/audio/eid-soft.wav', false);
 
         $this->assertSame('/audio/eid-soft.wav', $wish->fresh()->audio_path);
+    }
+
+    public function test_user_can_create_wish_with_recorded_audio(): void
+    {
+        $recording = UploadedFile::fake()->create('eid-recording.webm', 100, 'audio/webm');
+
+        $response = $this->post('/eid', $this->validPayload([
+            'audio_style' => 'none',
+            'audio_recording' => $recording,
+        ]));
+
+        $wish = Wish::first();
+
+        $response->assertRedirect(route('eid.show', $wish->code));
+        $this->assertSame('recording', $wish->audio_style);
+        $this->assertSame('/audio/wishes/'.$wish->code.'.webm', $wish->audio_path);
+        $this->assertFileExists(public_path('audio/wishes/'.$wish->code.'.webm'));
+
+        $this->get(route('eid.show', $wish->code))
+            ->assertOk()
+            ->assertSee('/audio/wishes/'.$wish->code.'.webm', false);
+
+        @unlink(public_path('audio/wishes/'.$wish->code.'.webm'));
     }
 
     public function test_html_tags_are_not_accepted_in_names(): void
